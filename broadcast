@@ -1,0 +1,43 @@
+Example(1):
+
+val carr=sc.textFile("/tmp/carriers.csv")
+val data = carr.map(line=>line.replace("\"","")).mapPartitionsWithIndex { (idx, iter) => if (idx == 0) iter.drop(1) else iter}.map(line=>line.split("\\,"))
+val mapData = data.map(cols=>(cols(0),cols(1))).collect.toMap
+
+val carrierbc=sc.broadcast(mapData)
+
+val flightsRDD= sc.textFile("/tmp/flights.csv")
+val flightDataRDD= flightsRDD.mapPartitionsWithIndex { (idx, iter) => if (idx == 0) iter.drop(1) else iter}.map(line=>line.split("\\,"))
+val flightPairRDD=flightDataRDD.map(x=>(x(6),x(5)))
+
+flightPairRDD.map(x=> (x._1,carrierbc.value(x._2))).collect
+
+Example(2)
+
+
+val hoods = Seq((1, "Mission"), (2, "SOMA"), (3, "Sunset"), (4, "Haight Ashbury"))
+val checkins = Seq((234, 1),(567, 2), (234, 3), (532, 2), (234, 4))
+//val hoodsRdd = sc.parallelize(hoods)
+val checkRdd = sc.parallelize(checkins)
+
+val broadcastedHoods = sc.broadcast(hoodsRdd.collectAsMap())
+
+val checkinsWithHoods = checkRdd.mapPartitions({row =>
+ row.map(x => (x._1, x._2, broadcastedHoods.value.getOrElse(x._2, -1)))
+}, preservesPartitioning = true)
+
+
+
+val checkinsWithHoods = checkRdd.mapPartitions({row =>
+ row.map(x => (x._1, x._2, broadcastedHoods.value.getOrElse(x._2, "N")))
+}, preservesPartitioning = true)
+
+
+Pass function with broadcasting
+
+val broadcastedHoods = sc.broadcast(hoodsRdd.collectAsMap())
+def findBroadcast(x:(Int,Int)):(Int,Int,String) = {
+(x._1, x._2, broadcastedHoods.value.getOrElse(x._2, "N"))
+}
+
+val checkinsWithHoods = checkRdd.map(x=> findBroadcast(x))

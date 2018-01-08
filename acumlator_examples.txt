@@ -1,0 +1,194 @@
+https://cloudxlab.com/assessment/slide/adv-spark-programming/559/adv-spark-programming-custom-accumulators
+
+https://qiita.com/gozuqi/items/2b78477730c7a5880dba
+
+
+Example(1):
+val accum = sc.accumulator(0)
+sc.parallelize(Array(1, 2, 3, 4)).foreach(x => accum += x)
+accum.value
+
+
+-- Another example:
+
+val accum = sc.accumulator(0)
+sc.parallelize(Array(1, 2, 3, 4)).map(x => accum += x).collect
+accum.value
+
+
+
+
+
+
+Example(2):
+
+Complex variable:
+
+class MyComplex(var x: Int, var y: Int) extends Serializable{ 
+   def reset(): Unit = { 
+     x = 0 
+     y = 0 
+   } 
+   def add(p:MyComplex): MyComplex = { 
+     x = x + p.x 
+     y = y + p.y 
+     return this 
+   } 
+ } 
+ 
+ 
+ import org.apache.spark.AccumulatorParam 
+ class ComplexAccumulatorV1 extends AccumulatorParam[MyComplex] { 
+ 
+ 
+     def zero(initialVal: MyComplex): MyComplex = { 
+         return initialVal 
+     } 
+ 
+ 
+     def addInPlace(v1: MyComplex, v2: MyComplex): MyComplex = { 
+         v1.add(v2) 
+         return v1; 
+     } 
+ } 
+ 
+ 
+ val vecAccum = sc.accumulator(new MyComplex(0,0))(new ComplexAccumulatorV1) 
+ 
+ 
+ var myrdd = sc.parallelize(Array(1,2,3)) 
+ def myfunc(x:Int):Int = { 
+     vecAccum += new MyComplex(x, x) 
+     return x * 3 
+ } 
+ var myrdd1 = myrdd.map(myfunc) 
+ myrdd1.collect() 
+ vecAccum.value.x 
+ vecAccum.value.y 
+
+example(4):
+
+import org.apache.spark.AccumulatorParam
+object StringAccumulatorParam extends AccumulatorParam[String] {
+  def zero(initialValue: String): String = ""
+  def addInPlace(t1: String, t2: String): String = t1 + t2
+}
+
+  val rdd = sc.makeRDD(Seq(1, 2, 3))
+  val s = sc.accumulator("0")(StringAccumulatorParam)
+  rdd.foreach(s += _.toString)
+  println(s.value)
+
+example(5):
+
+implicit object StringAccumulatorParam extends AccumulatorParam[String] {
+  def zero(initialValue: String): String = ""
+  def addInPlace(t1: String, t2: String): String = t1 + t2
+}
+  val rdd = sc.makeRDD(Seq(1, 2, 3))
+  val s = sc.accumulator("0")
+
+  
+example(6):
+
+object SeqAccumulableParam extends AccumulableParam[Seq[String], String] {
+  def zero(initialValue: Seq[String]): Seq[String] = Seq.empty
+  def addInPlace(r1: Seq[String], r2: Seq[String]): Seq[String] = r1 ++ r2
+  def addAccumulator(r: Seq[String], t: String): Seq[String] = r :+ t
+}
+  val rdd = sc.makeRDD(Seq("a", "b", "c"))
+  val s = sc.accumulable(Seq.empty[String])(SeqAccumulableParam)
+  rdd.foreach(s += _)
+  println(s.value) //→List(b, c, a)
+
+
+  
+
+example(7):
+  
+val ac = sc.accumulator(0, "some accumulator")
+a = a.map(x => someFunction(x, ac))
+
+
+def someFunction(x: TypeOfX, ac: Accumulator[Int]) : ReturnType =
+{
+    ac += 1
+}  
+
+val ac = sc.accumulator(0, "some accumulator")
+a = a.map(x => someFunction(x, ac))
+
+example(8):
+Accumlator Example1:
+
+val accum1 = sc.accumulator(0,"accum1")
+val accum2 = sc.accumulator(0,"accum2")
+val accum3 = sc.accumulator(0,"accum3")
+
+sc.parallelize(Array(1, 1, 2, 2,3,3)).map(x=> match x {
+                                              case 1=> accum1+=1
+											  case 2=> accum2+=1
+											  case 3=> accum3+=1
+											  }
+										  ).collect
+										  
+										  
+Or:										  
+sc.parallelize(Array(1, 1, 2, 2,3,3)).map(x=> x match { case 1=> accum1+=1;case 2=> accum2+=1;case 3=> accum3+=1 }).collect
+
+
+Accumlator Example2 with Function:
+
+val ac = sc.accumulator(0, "some accumulator")
+
+def someFunction(x: Int, ac: Accumulator[Int])
+{
+    ac += x
+}
+
+Accumlator example2:
+
+import org.apache.spark.AccumulatorParam
+
+object StringAccumulatorParam extends AccumulatorParam[String] {
+
+    def zero(initialValue: String): String = {
+        ""
+    }
+
+    def addInPlace(s1: String, s2: String): String = {
+        s"$s1 $s2"
+    }
+}
+
+val stringAccum = sc.accumulator("")(StringAccumulatorParam)
+
+val rdd = sc.parallelize("foo" :: "bar" :: Nil, 2)
+rdd.foreach(s => stringAccum += s)
+stringAccum.value
+
+
+Accumlator example3: Set
+
+object StringSetAccumulatorParam extends AccumulatorParam[Set[String]] {
+    def zero(initialValue: Set[String]): Set[String] = { Set() }
+    def addInPlace(s1: Set[String], s2: Set[String]): Set[String] = { s1 ++ s2 }
+}
+
+val stringSetAccum = sc.accumulator(Set[String]())(StringSetAccumulatorParam)
+sc.parallelize(Array("1", "2", "3", "1")).foreach(s => stringSetAccum += Set(s))
+stringSetAccum.value.toString
+
+
+Accumlator example3: List
+
+
+object StringListAccumulatorParam extends AccumulatorParam[List[String]] {
+    def zero(initialValue: List[String]): List[String] = { List.empty[String] }
+    def addInPlace(s1: List[String], s2: List[String]): List[String] = { s1 ::: s2 }
+}
+
+val stringListAccum = sc.accumulator(List[String]())(StringListAccumulatorParam)
+sc.parallelize(Array("1", "2", "3", "1")).foreach(s => stringSetAccum += List(s))
+stringListAccum.value.toString
+

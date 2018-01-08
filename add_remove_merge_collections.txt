@@ -1,0 +1,93 @@
+List:
+
+Example(1): Add two list, merger two Lists
+
+val pairs1 = List("aa", "bb","cc", "dd")
+val pairs2 = List("aa", "bb","cc", "dd")
+val pairs3 = pairs1 ::: pairs2 
+
+val pairs1 = List("aa", "bb","cc", "dd")
+val pairs2 = "RR"::pairs1
+
+
+--Add/Remove List
+
+import scala.collection.mutable.ListBuffer
+
+var fruits = new ListBuffer[String]()
+
+// add one element at a time to the ListBuffer
+fruits += "Apple"
+fruits += "Banana"
+fruits += "Orange"
+// add multiple elements
+fruits += ("Strawberry", "Kiwi", "Pineapple")
+
+// 
+fruits -= "Apple"
+val fruitsList = fruits.toList
+
+
+//
+fruits-=fruits(0)
+
+
+Map:
+
+Example(3): Add two maps
+
+Join two:
+val map1 = Map("A"->"AA","B"->"BB")
+val map2 = Map("C"->"CC","D"->"DD")
+val map3 = map1 ++ map2
+
+--Add/Remove
+var states = scala.collection.mutable.Map[String, String]()
+states +="mykey" -> "myval"
+states +="mykey2" -> "myval2"
+states("AK")="AK"
+states -= "AK"
+states.remove("myval")
+
+--Get first item
+val h=states.head
+states -= h._1
+
+
+
+
+
+Another way:
+
+
+Example(1): Add two list, merger two Lists
+
+val pairs1 = List("aa", "bb","cc", "dd")
+val pairs2 = List("aa", "bb","cc", "dd")
+val pairs3 = pairs1 ::: pairs2 
+
+
+
+val pairs1 = List("aa", "bb","cc", "dd")
+val pairs2 = "RR"::pairs1
+
+
+Example(3): Add two maps
+
+val map1 = Map("A"->"AA","B"->"BB")
+val map2 = Map("C"->"CC","D"->"DD")
+val map3 = map1 ++ map2
+
+
+
+
+
+
+val pairs1 = sc.parallelize(List("aa", "bb","cc", "dd"))
+val pairs2 = sc.parallelize(List("aa", "bb","cc", "dd"))
+
+val pairs3 = pairs1.union(pairs2)
+
+
+
+List.empty[String]
