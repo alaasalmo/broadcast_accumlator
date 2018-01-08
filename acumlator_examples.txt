@@ -126,11 +126,10 @@ val accum2 = sc.accumulator(0,"accum2")
 val accum3 = sc.accumulator(0,"accum3")
 
 sc.parallelize(Array(1, 1, 2, 2,3,3)).map(x=> match x {
-                                              case 1=> accum1+=1
-											  case 2=> accum2+=1
-											  case 3=> accum3+=1
-											  }
-										  ).collect
+                                          case 1=> accum1+=1
+		                          case 2=> accum2+=1
+                                          case 3=> accum3+=1
+                                           }).collect
 										  
 										  
 Or:										  
