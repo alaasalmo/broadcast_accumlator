@@ -110,7 +110,7 @@ val ac = sc.accumulator(0, "some accumulator")
 a = a.map(x => someFunction(x, ac))
 
 
-def someFunction(x: TypeOfX, ac: Accumulator[Int]) : ReturnType =
+def someFunction(x:Int, ac: Accumulator[Int]) : ReturnType =
 {
     ac += 1
 }  
